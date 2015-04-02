@@ -87,11 +87,10 @@ Bug Tracker: <https://github.com/johnnywang1991/RexInline/issues>
 \&  my $rex_inline = Rex::Inline\->new(
 \&    use_debug => 0
 \&    # now you can set default authentication
-\&    # optional set default ssh authentication
-\&    # user => $user,
-\&    # password => $password,
-\&    # public_key => $public_key,
-\&    # private_key => $private_key,
+\&    user => $user,              # optional
+\&    password => $password,      # optional
+\&    public_key => $public_key,  # optional
+\&    private_key => $private_key,# optional
 \&  );
 \&
 \&  # add default authentication 

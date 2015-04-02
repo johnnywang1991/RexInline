@@ -34,11 +34,10 @@ when you want use rex in your perl program, and do not want to use the B<rex> co
   my $rex_inline = Rex::Inline->new(
     use_debug => 0
     # now you can set default authentication
-    # optional set default ssh authentication
-    # user => $user,
-    # password => $password,
-    # public_key => $public_key,
-    # private_key => $private_key,
+    user => $user,              # optional
+    password => $password,      # optional
+    public_key => $public_key,  # optional
+    private_key => $private_key,# optional
   );
 
   # add default authentication 
@@ -103,7 +102,7 @@ use utf8;
 use FindBin;
 use POSIX 'strftime';
 
-our $VERSION = '0.0.4'; # VERSION
+our $VERSION = '0.0.5'; # VERSION
 
 use Moose;
 use MooseX::AttributeShortcuts;
