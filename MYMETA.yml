@@ -27,4 +27,5 @@ requires:
   Rex: '0'
   YAML::XS: '0'
   namespace::autoclean: '0'
-version: v0.0.1
+resources: {}
+version: v0.0.2

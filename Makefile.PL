@@ -21,5 +21,14 @@ WriteMakefile(
     'namespace::autoclean' => 0
   },
   dist => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-  clean => { FILES => 'Rex-Inline-*' }
+  clean => { FILES => 'Rex-Inline-*' },
+  META_MERGE => {
+    resources => {
+      repository => {
+        type => 'git',
+        url => 'git://github.com/johnnywang1991/RexInline.git',
+        web => 'https://github.com/johnnywang1991/RexInline',
+      }
+    }
+  }
 );

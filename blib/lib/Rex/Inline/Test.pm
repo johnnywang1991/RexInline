@@ -4,7 +4,9 @@ use Rex -feature => ['1.0'];
 
 extends 'Rex::Inline::Base';
 
-sub func {
+has func => (is => 'ro', lazy => 1, builder => 1);
+
+sub _build_func {
   my $self = shift;
 
   return sub {

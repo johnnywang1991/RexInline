@@ -62,7 +62,7 @@
 .\" ========================================================================
 .\"
 .IX Title "Rex::Inline 3"
-.TH Rex::Inline 3 "2015-03-31" "perl v5.10.1" "User Contributed Perl Documentation"
+.TH Rex::Inline 3 "2015-04-01" "perl v5.10.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -72,28 +72,61 @@ Rex::Inline \- write Rex in perl
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 Rex::Inline is an \s-1API\s0 of \fIRex\fR module write with Moose.
+.PP
+when you want use rex in your perl program,
+.PP
+and do not want to use the \fBrex\fR command line,
+.PP
+you can try to use this module.
 .SH "GETTING HELP"
 .IX Header "GETTING HELP"
-.IP "\(bu" 3
-Web Site: <http://rexify.org/>
-.IP "\(bu" 3
-\&\s-1IRC:\s0 irc.freenode.net #rex
-.IP "\(bu" 3
-Bug Tracker: <https://github.com/RexOps/Rex/issues>
+.IP "\(bu" 1
+Bug Tracker: <https://github.com/johnnywang1991/RexInline/issues>
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-.Vb 4
-\&  use strict;
-\&  use warnings;
+.Vb 2
 \&  use Rex::Inline;
 \&  use Rex::Inline::Test;
 \&
-\&  my $rex = Rex::Inline\->new(use_debug => 0);
-\&  my $task1 = Rex::Inline::Test\->new(user => \*(Aqroot\*(Aq, password => \*(Aqtest\*(Aq, server => [\*(Aq127.0.0.1\*(Aq]);
+\&  my $rex_inline = Rex::Inline\->new(use_debug => 0);
 \&
-\&  $rex\->add_task($task1);
-\&  $rex\->execute;
-\&  $rex\->reports;
+\&  # Rex::Inline::Test is based on Rex::Inline::Base module
+\&  # See Rex::Inline::Base Documents
+\&  $rex_inline\->add_task(
+\&    Rex::Inline::Test\->new(
+\&      user => $user,
+\&      server => [@server],
+\&      # if need password
+\&      password => $password,
+\&      # optional
+\&      public_key => $public_key,
+\&      private_key => $private_key,
+\&      # input param, in any format you want
+\&      input => $input,
+\&    )
+\&  );
+\&
+\&  # or data reference like this
+\&  $rex_inline\->add_task(
+\&    {
+\&      name => \*(Aqsomething_uniq_string\*(Aq,  # name is required when add data_reference task
+\&      func => sub {                     # func is required when add data_reference task
+\&        ...
+\&      },
+\&      user => $user,
+\&      server => [@server],
+\&      # if need password
+\&      password => $password,
+\&      # optional
+\&      public_key => $public_key,
+\&      private_key => $private_key,
+\&    }
+\&  );
+\&
+\&  $rex_inline\->execute;
+\&
+\&  # get rex task reports
+\&  $rex_inline\->reports;
 .Ve
 .SH "ATTRIBUTES"
 .IX Header "ATTRIBUTES"
@@ -136,21 +169,47 @@ default is 5
 .IX Item "log_paths"
 get log paths (ArrayRef)
 .Sp
-format is \f(CW\*(C`[{task_id = log_path}, ...]\*(C'\fR
+format is [{task_id => log_path}, ...]
 .Sp
 \&\fIreadonly\fR
 .IP "reports" 7
 .IX Item "reports"
 get rex process reports (ArrayRef)
 .Sp
-format is \f(CW\*(C`[{report = $report_ref, task_id = $task_id, date = $date, hostname = $hostname}, ...]\*(C'\fR
+format is \f(CW\*(C`[{report =\*(C'\fR \f(CW$report_ref\fR, task_id => \f(CW$task_id\fR, date => \f(CW$date\fR, hostname => \f(CW$hostname\fR}, ...]>
 .Sp
 \&\fIreadonly\fR
 .SH "METHODS"
 .IX Header "METHODS"
 .IP "add_task" 2
 .IX Item "add_task"
-add \fIRex::Inline::Base\fR Object to TaskList
+add \fBRex::Inline::Base\fR Object to TaskList
+.Sp
+or Add Data reference to TaskList
+.Sp
+.Vb 1
+\&  my $rex_inline = Rex::Inline\->new;
+\&
+\&  $rex_inline\->add_task({
+\&      name => \*(Aqsomething_uniq_string\*(Aq, # required when add data_reference task
+\&      func => sub { # required when add data_reference task
+\&        ...
+\&      },
+\&      user => $user2,
+\&      server => [@server2],
+\&      # if need password
+\&      password => $password2,
+\&      # optional
+\&      public_key => $public_key2,
+\&      private_key => $private_key2,
+\&  });
+\&
+\&  ...
+.Ve
 .IP "execute" 2
 .IX Item "execute"
 Execute all loaded Task in parallel
+.Sp
+.Vb 1
+\&  $rex_inline\->execute;
+.Ve

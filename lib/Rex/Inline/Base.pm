@@ -55,7 +55,7 @@ use warnings;
 
 use utf8;
 
-our $VERSION = '0.0.1'; # VERSION
+our $VERSION = '0.0.2'; # VERSION
 
 use Moose;
 use MooseX::AttributeShortcuts;
@@ -76,11 +76,6 @@ default is random number
 
 =cut
 has id => (is => 'ro', builder => 1);
-=item user
-
-username used when ssh connection
-
-This param is required.
 
 =item server
 
@@ -89,7 +84,11 @@ server address used when ssh connection
 This param is required.
 
 =cut
-has [qw(user server)] => (is => 'ro', required => 1);
+has server => (is => 'ro', required => 1);
+=item user
+
+username used when ssh connection
+
 =item password
 
 password used when ssh connection
@@ -102,8 +101,15 @@ private_key filename used when ssh connection
 
 public_key filename used when ssh connection
 
+=item sudo [TRUE|FALSE]
+
+use sudo when execute commands
+
+default is C<undef>
+
 =cut
-has [qw(password private_key public_key)] => (is => 'ro');
+has user => (is => 'ro', default => '');
+has [qw(password private_key public_key sudo)] => (is => 'ro');
 =item input
 
 input param for tasklist module in any format you need
@@ -124,6 +130,7 @@ sub _build_task_auth {
   $auth{password} = $_[0]->{password} if $_[0]->{password};
   $auth{public_key} = $_[0]->{public_key} if $_[0]->{public_key};
   $auth{private_key} = $_[0]->{private_key} if $_[0]->{private_key};
+  $auth{sudo} = $_[0]->{sudo} if $_[0]->{sudo};
   return {%auth};
 }
 

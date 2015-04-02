@@ -55,7 +55,7 @@ use warnings;
 
 use utf8;
 
-our $VERSION = '0.0.1'; # VERSION
+our $VERSION = '0.0.2'; # VERSION
 
 use Moose;
 use MooseX::AttributeShortcuts;

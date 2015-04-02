@@ -16,31 +16,64 @@ Rex::Inline - write Rex in perl
 
 Rex::Inline is an API of I<Rex> module write with Moose.
 
+when you want use rex in your perl program, 
+
+and do not want to use the B<rex> command line,
+
+you can try to use this module.
+
 =head1 GETTING HELP
  
-=over 3
+=over 1
  
-=item * Web Site: L<http://rexify.org/>
- 
-=item * IRC: irc.freenode.net #rex
- 
-=item * Bug Tracker: L<https://github.com/RexOps/Rex/issues>
+=item * Bug Tracker: L<https://github.com/johnnywang1991/RexInline/issues>
  
 =back
 
 =head1 SYNOPSIS
 
-  use strict;
-  use warnings;
   use Rex::Inline;
   use Rex::Inline::Test;
 
-  my $rex = Rex::Inline->new(use_debug => 0);
-  my $task1 = Rex::Inline::Test->new(user => 'root', password => 'test', server => ['127.0.0.1']);
+  my $rex_inline = Rex::Inline->new(use_debug => 0);
 
-  $rex->add_task($task1);
-  $rex->execute;
-  $rex->reports;
+  # Rex::Inline::Test is based on Rex::Inline::Base module
+  # See Rex::Inline::Base Documents
+  $rex_inline->add_task(
+    Rex::Inline::Test->new(
+      user => $user,
+      server => [@server],
+      # if need password
+      password => $password,
+      # optional
+      public_key => $public_key,
+      private_key => $private_key,
+      # input param, in any format you want
+      input => $input,
+    )
+  );
+
+  # or data reference like this
+  $rex_inline->add_task(
+    {
+      name => 'something_uniq_string',  # name is required when add data_reference task
+      func => sub {                     # func is required when add data_reference task
+        ...
+      },
+      user => $user,
+      server => [@server],
+      # if need password
+      password => $password,
+      # optional
+      public_key => $public_key,
+      private_key => $private_key,
+    }
+  );
+
+  $rex_inline->execute;
+
+  # get rex task reports
+  $rex_inline->reports;
 
 =cut
 package Rex::Inline;
@@ -52,7 +85,7 @@ use utf8;
 use FindBin;
 use POSIX 'strftime';
 
-our $VERSION = '0.0.1'; # VERSION
+our $VERSION = '0.0.2'; # VERSION
 
 use Moose;
 use MooseX::AttributeShortcuts;
@@ -129,7 +162,7 @@ has parallelism => (is => 'rw', default => 5);
 
 get log paths (ArrayRef)
 
-format is C<[{task_id = log_path}, ...]>
+format is [{task_id => log_path}, ...]
 
 I<readonly>
 =cut
@@ -143,7 +176,7 @@ has log_paths => (
 
 get rex process reports (ArrayRef)
 
-format is C<[{report = $report_ref, task_id = $task_id, date = $date, hostname = $hostname}, ...]>
+format is C<[{report => $report_ref, task_id => $task_id, date => $date, hostname => $hostname}, ...]>
 
 I<readonly>
 =cut
@@ -167,20 +200,54 @@ has pm => (is => 'ro', lazy => 1, builder => 1); # parallel forkmanager object, 
 
 =item add_task
 
-add I<Rex::Inline::Base> Object to TaskList
+add B<Rex::Inline::Base> Object to TaskList
+
+or Add Data reference to TaskList 
+
+  my $rex_inline = Rex::Inline->new;
+
+  $rex_inline->add_task({
+      name => 'something_uniq_string', # required when add data_reference task
+      func => sub { # required when add data_reference task
+        ...
+      },
+      user => $user2,
+      server => [@server2],
+      # if need password
+      password => $password2,
+      # optional
+      public_key => $public_key2,
+      private_key => $private_key2,
+  });
+
+  ...
 
 =cut
 
+use Moose::Util::TypeConstraints;
+use Rex::Inline::Test;
+
+subtype 'TaskType'
+  => as 'ArrayRef[Object]';
+coerce 'TaskType'
+  => from 'ArrayRef',
+  => via { [ map { (ref $_ eq 'HASH') ? Rex::Inline::Test->new($_) : $_ } @$_ ] };
+
 has task => (
   is => 'ro',
+  isa => 'TaskType',
+  coerce => 1,
   default => sub{[]},
   traits => ['Array'],
   handles => {add_task => 'push'},
 );
+no Moose::Util::TypeConstraints;
 
 =item execute
 
 Execute all loaded Task in parallel
+
+  $rex_inline->execute;
 
 =cut
 sub execute {

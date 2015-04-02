@@ -17,6 +17,7 @@
 #     DISTNAME => q[Rex-Inline]
 #     EXE_FILES => []
 #     LICENSE => q[GPL v2]
+#     META_MERGE => { resources=>{ repository=>{ type=>q[git], url=>q[git://github.com/johnnywang1991/RexInline.git], web=>q[https://github.com/johnnywang1991/RexInline] } } }
 #     NAME => q[Rex::Inline]
 #     PL_FILES => {  }
 #     PREREQ_PM => { File::Path::Tiny=>q[0], File::Spec::Functions=>q[0], File::Temp=>q[0], Moose=>q[0], MooseX::AttributeShortcuts=>q[0], Parallel::ForkManager=>q[0], Rex=>q[0], YAML::XS=>q[0], namespace::autoclean=>q[0] }
@@ -62,11 +63,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Rex::Inline
 NAME_SYM = Rex_Inline
-VERSION = 0.0.1
+VERSION = 0.0.2
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_0_1
+VERSION_SYM = 0_0_2
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.0.1
+XS_VERSION = 0.0.2
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -274,7 +275,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Rex-Inline
-DISTVNAME = Rex-Inline-0.0.1
+DISTVNAME = Rex-Inline-0.0.2
 
 
 # --- MakeMaker macro section:
@@ -526,7 +527,8 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Rex: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  YAML::XS: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  namespace::autoclean: '\''0'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: v0.0.1' >> META_new.yml
+	$(NOECHO) $(ECHO) 'resources: {}' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: v0.0.2' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -576,7 +578,8 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "v0.0.1"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "resources" : {},' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "v0.0.2"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
