@@ -11,12 +11,10 @@ use Rex::Commands::User;
 use Rex::Inline;
 use Rex::Inline::Test;
 
-my $rex = Rex::Inline->new;
-
-$rex->add_auth({
+my $rex = Rex::Inline->new(
   user => 'root',
   password => 'Root123',
-});
+);
 
 my $user = Rex::Inline::Test->new(
   server => ['127.0.0.1'],
@@ -36,5 +34,5 @@ $rex->add_task($tasks2);
 
 $rex->execute;
 
-$rex->report_as_yaml;
-$rex->report_as_json;
+### r:  $rex->report_as_yaml
+### j: $rex->report_as_json

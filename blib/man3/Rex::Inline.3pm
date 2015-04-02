@@ -73,11 +73,7 @@ Rex::Inline \- write Rex in perl
 .IX Header "DESCRIPTION"
 Rex::Inline is an \s-1API\s0 of \fIRex\fR module write with Moose.
 .PP
-when you want use rex in your perl program,
-.PP
-and do not want to use the \fBrex\fR command line,
-.PP
-you can try to use this module.
+when you want use rex in your perl program, and do not want to use the \fBrex\fR command line, you can try to use this module.
 .SH "GETTING HELP"
 .IX Header "GETTING HELP"
 .IP "\(bu" 1
@@ -88,7 +84,15 @@ Bug Tracker: <https://github.com/johnnywang1991/RexInline/issues>
 \&  use Rex::Inline;
 \&  use Rex::Inline::Test;
 \&
-\&  my $rex_inline = Rex::Inline\->new(use_debug => 0);
+\&  my $rex_inline = Rex::Inline\->new(
+\&    use_debug => 0
+\&    # now you can set default authentication
+\&    # optional set default ssh authentication
+\&    # user => $user,
+\&    # password => $password,
+\&    # public_key => $public_key,
+\&    # private_key => $private_key,
+\&  );
 \&
 \&  # add default authentication 
 \&  # if you didn\*(Aqt provide authentication in your task, Rex::Inline will use this as default one
@@ -144,6 +148,18 @@ Bug Tracker: <https://github.com/johnnywang1991/RexInline/issues>
 .Ve
 .SH "ATTRIBUTES"
 .IX Header "ATTRIBUTES"
+.IP "user" 7
+.IX Item "user"
+set default ssh connection user
+.IP "password" 7
+.IX Item "password"
+set default ssh connection password
+.IP "private_key" 7
+.IX Item "private_key"
+set default private_key filename
+.IP "public_key" 7
+.IX Item "public_key"
+set default public_key filename
 .IP "use_debug" 7
 .IX Item "use_debug"
 set/get debug option (Bool)
@@ -183,7 +199,11 @@ default is 5
 .IX Item "log_paths"
 get log paths (ArrayRef)
 .Sp
-format is [{task_id => log_path}, ...]
+format is
+.Sp
+.Vb 1
+\&  [{task_id => log_path}, ...]
+.Ve
 .Sp
 \&\fIreadonly\fR
 .IP "reports" 7
@@ -231,6 +251,19 @@ Add an authentication fallback
 This is the default authentication
 .Sp
 If all you provide authentications is failed, \fBRex::Inline\fR will try to use this one
+.Sp
+.Vb 10
+\&  $rex_inline\->add_auth({
+\&    user => $user,
+\&    password => $password,
+\&    sudo => TRUE,
+\&  });
+\&  $rex_inline\->add_auth({
+\&    user => $user,
+\&    public_key => $public_key,
+\&    private_key => $private_key,
+\&  });
+.Ve
 .IP "execute" 7
 .IX Item "execute"
 Execute all loaded Task in parallel

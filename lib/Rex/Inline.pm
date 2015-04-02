@@ -16,11 +16,7 @@ Rex::Inline - write Rex in perl
 
 Rex::Inline is an API of I<Rex> module write with Moose.
 
-when you want use rex in your perl program, 
-
-and do not want to use the B<rex> command line,
-
-you can try to use this module.
+when you want use rex in your perl program, and do not want to use the B<rex> command line, you can try to use this module.
 
 =head1 GETTING HELP
  
@@ -35,7 +31,15 @@ you can try to use this module.
   use Rex::Inline;
   use Rex::Inline::Test;
 
-  my $rex_inline = Rex::Inline->new(use_debug => 0);
+  my $rex_inline = Rex::Inline->new(
+    use_debug => 0
+    # now you can set default authentication
+    # optional set default ssh authentication
+    # user => $user,
+    # password => $password,
+    # public_key => $public_key,
+    # private_key => $private_key,
+  );
 
   # add default authentication 
   # if you didn't provide authentication in your task, Rex::Inline will use this as default one
@@ -99,7 +103,7 @@ use utf8;
 use FindBin;
 use POSIX 'strftime';
 
-our $VERSION = '0.0.3'; # VERSION
+our $VERSION = '0.0.4'; # VERSION
 
 use Moose;
 use MooseX::AttributeShortcuts;
@@ -133,6 +137,26 @@ no Moose::Util::TypeConstraints;
 =head1 ATTRIBUTES
 
 =over 7
+
+=item user
+
+set default ssh connection user
+
+=item password
+
+set default ssh connection password
+
+=item private_key
+
+set default private_key filename
+
+=item public_key
+
+set default public_key filename
+
+=cut
+
+has [qw(user password private_key public_key)] => (is => 'ro', predicate => 1);
 
 =item use_debug
 
@@ -188,7 +212,9 @@ has parallelism => (is => 'rw', default => 5);
 
 get log paths (ArrayRef)
 
-format is [{task_id => log_path}, ...]
+format is 
+
+  [{task_id => log_path}, ...]
 
 I<readonly>
 =cut
@@ -217,6 +243,7 @@ has reports => (
     map_reports => 'map'
   }
 );
+
 =back
 =cut
 
@@ -271,6 +298,17 @@ Add an authentication fallback
 This is the default authentication
 
 If all you provide authentications is failed, B<Rex::Inline> will try to use this one
+
+  $rex_inline->add_auth({
+    user => $user,
+    password => $password,
+    sudo => TRUE,
+  });
+  $rex_inline->add_auth({
+    user => $user,
+    public_key => $public_key,
+    private_key => $private_key,
+  });
 
 =cut
 
@@ -344,8 +382,8 @@ sub execute {
 
 =cut
 
-sub report_as_yaml { Dump( shift->map_reports(sub { Dump($_) }) ) }
-sub report_as_json { encode_json( shift->map_reports(sub { encode_json($_) }) ) }
+sub report_as_yaml { Dump( [ shift->map_reports(sub { Dump($_) }) ] ) }
+sub report_as_json { encode_json( [shift->map_reports(sub { encode_json($_) })] ) }
 
 =item print_as_yaml
 
@@ -439,10 +477,18 @@ sub _build_tasklist {
     task $task->name, group => $task->id, $task->func, { class => "Rex::CLI" };
   }
 
-  ### add auth fallback
-  if ($self->has_auth) {
-    auth fallback => @{ $self->auth };
+  ### default auth
+  my @default_auth;
+  if ($self->{user}) {
+    @default_auth = ( user => $self->{user} );
+    for (qw(password public_key private_key)) {
+      push @default_auth, $_ => $self->{$_} if $self->{$_};
+    }
   }
+  $self->add_auth({@default_auth}) if @default_auth;
+
+  ### add auth fallback
+  auth fallback => @{ $self->auth } if $self->has_auth;
 
   return Rex::TaskList->create;
 }
