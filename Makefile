@@ -63,11 +63,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Rex::Inline
 NAME_SYM = Rex_Inline
-VERSION = 0.0.2
+VERSION = 0.0.3
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_0_2
+VERSION_SYM = 0_0_3
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.0.2
+XS_VERSION = 0.0.3
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -275,7 +275,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Rex-Inline
-DISTVNAME = Rex-Inline-0.0.2
+DISTVNAME = Rex-Inline-0.0.3
 
 
 # --- MakeMaker macro section:
@@ -528,7 +528,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  YAML::XS: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  namespace::autoclean: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'resources: {}' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: v0.0.2' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: v0.0.3' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -579,7 +579,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "resources" : {},' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "v0.0.2"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "v0.0.3"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 

@@ -37,23 +37,21 @@ you can try to use this module.
 
   my $rex_inline = Rex::Inline->new(use_debug => 0);
 
-  # Rex::Inline::Test is based on Rex::Inline::Base module
-  # See Rex::Inline::Base Documents
-  $rex_inline->add_task(
-    Rex::Inline::Test->new(
-      user => $user,
-      server => [@server],
-      # if need password
-      password => $password,
-      # optional
-      public_key => $public_key,
-      private_key => $private_key,
-      # input param, in any format you want
-      input => $input,
-    )
-  );
+  # add default authentication 
+  # if you didn't provide authentication in your task, Rex::Inline will use this as default one
+  # or if your authentication is failed, Rex::Inline will use this retry the ssh connection
+  $rex_inline->add_auth({
+    user => $user,
+    password => $password,
+    sudo => TRUE,
+  });
+  $rex_inline->add_auth({
+    user => $user,
+    public_key => $public_key,
+    private_key => $private_key,
+  });
 
-  # or data reference like this
+  # data reference like this
   $rex_inline->add_task(
     {
       name => 'something_uniq_string',  # name is required when add data_reference task
@@ -68,6 +66,22 @@ you can try to use this module.
       public_key => $public_key,
       private_key => $private_key,
     }
+  );
+
+  # or Rex::Inline::Test is based on Rex::Inline::Base module
+  # See Rex::Inline::Base Documents
+  $rex_inline->add_task(
+    Rex::Inline::Test->new(
+      user => $user,
+      server => [@server],
+      # if need password
+      password => $password,
+      # optional
+      public_key => $public_key,
+      private_key => $private_key,
+      # input param, in any format you want
+      input => $input,
+    )
   );
 
   $rex_inline->execute;
@@ -85,7 +99,7 @@ use utf8;
 use FindBin;
 use POSIX 'strftime';
 
-our $VERSION = '0.0.2'; # VERSION
+our $VERSION = '0.0.3'; # VERSION
 
 use Moose;
 use MooseX::AttributeShortcuts;
@@ -94,7 +108,8 @@ use File::Temp 'mkdtemp';
 use File::Path::Tiny;
 use File::Spec::Functions;
 
-use YAML::XS 'LoadFile';
+use YAML::XS qw(LoadFile Dump);
+use JSON;
 use Parallel::ForkManager;
 
 use Rex -feature => 0.31;
@@ -102,7 +117,18 @@ use Rex::Config;
 use Rex::Group;
 use Rex::TaskList;
 
+# custom module
+use Rex::Inline::Test;
+
 use namespace::autoclean;
+
+use Moose::Util::TypeConstraints;
+subtype 'TaskType'
+  => as 'ArrayRef[Object]';
+coerce 'TaskType'
+  => from 'ArrayRef',
+  => via { [ map { (ref $_ eq 'HASH') ? Rex::Inline::Test->new($_) : $_ } @$_ ] };
+no Moose::Util::TypeConstraints;
 
 =head1 ATTRIBUTES
 
@@ -176,7 +202,9 @@ has log_paths => (
 
 get rex process reports (ArrayRef)
 
-format is C<[{report => $report_ref, task_id => $task_id, date => $date, hostname => $hostname}, ...]>
+format is:
+
+  [{report => $report_ref, task_id => $task_id, date => $date, hostname => $hostname}, ...]
 
 I<readonly>
 =cut
@@ -184,7 +212,10 @@ has reports => (
   is => 'ro',
   default => sub{[]},
   traits => ['Array'],
-  handles => {add_reports => 'push'},
+  handles => { 
+    add_reports => 'push',
+    map_reports => 'map'
+  }
 );
 =back
 =cut
@@ -196,7 +227,7 @@ has pm => (is => 'ro', lazy => 1, builder => 1); # parallel forkmanager object, 
 
 =head1 METHODS
 
-=over 2
+=over 7
 
 =item add_task
 
@@ -224,15 +255,6 @@ or Add Data reference to TaskList
 
 =cut
 
-use Moose::Util::TypeConstraints;
-use Rex::Inline::Test;
-
-subtype 'TaskType'
-  => as 'ArrayRef[Object]';
-coerce 'TaskType'
-  => from 'ArrayRef',
-  => via { [ map { (ref $_ eq 'HASH') ? Rex::Inline::Test->new($_) : $_ } @$_ ] };
-
 has task => (
   is => 'ro',
   isa => 'TaskType',
@@ -241,7 +263,25 @@ has task => (
   traits => ['Array'],
   handles => {add_task => 'push'},
 );
-no Moose::Util::TypeConstraints;
+
+=item add_auth
+
+Add an authentication fallback
+
+This is the default authentication
+
+If all you provide authentications is failed, B<Rex::Inline> will try to use this one
+
+=cut
+
+has auth => (
+  is => 'ro',
+  isa => 'ArrayRef[HashRef]',
+  default => sub{[]},
+  traits => ['Array'],
+  handles => {add_auth => 'push'},
+  predicate => 1
+);
 
 =item execute
 
@@ -255,11 +295,14 @@ sub execute {
 
   ### setup parallel forkmanager
   $self->pm->run_on_finish(sub {
-    my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+    my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $results) = @_;
     # retrieve data structure from child
-    if ($data_structure_reference) {  # children are not forced to send anything
-      my @reports = @$data_structure_reference;  # child passed a string reference
-      $self->add_reports( @reports ) if @reports;
+    if ($results) {  # children are not forced to send anything
+      my @reports = @{$results->{reports}};
+      $self->add_reports(@reports) if @reports;
+
+      my @log_paths = @{$results->{log_paths}};
+      $self->add_log_paths(@log_paths) if @log_paths;
     }
   });
 
@@ -268,27 +311,54 @@ sub execute {
     $self->pm->start and next;
 
     my @reports;
+    my @log_paths;
     if ( $self->tasklist->is_task($task_in_list) ) {
       my $task_id = $self->tasklist->get_task($task_in_list)->desc;
       ### set logging path
-      logging to_file =>
-        catfile( $self->prefix, "${task_id}.log" );
+      my $log_path = catfile( $self->prefix, "${task_id}.log" );
+      logging to_file => $log_path;
+      push @log_paths, $log_path;
       ### set report path
       my $report_path = mkdtemp( sprintf("%s/reports_XXXXXX", $self->prefix) );
       set report_path => $report_path;
       ### run
       $self->tasklist->run($task_in_list);
       ### fetch reports
-      @reports = $self->_fetch_reports($task_in_list, $report_path, $task_id) if $self->use_report;
+      push @reports, $self->_fetch_reports($task_in_list, $report_path, $task_id) if $self->use_report;
     }
 
-    $self->pm->finish(0, [@reports]);
+    $self->pm->finish(0, {reports => [@reports], log_paths => [@log_paths]});
   }
 
   ### wait parallel task
   $self->pm->wait_all_children;
-  ### over
 }
+
+=item report_as_yaml
+
+  my $yaml_report = $rex_inline->report_as_yaml;
+
+=item report_as_json
+
+  my $json_report = $rex_inline->report_as_json;
+
+=cut
+
+sub report_as_yaml { Dump( shift->map_reports(sub { Dump($_) }) ) }
+sub report_as_json { encode_json( shift->map_reports(sub { encode_json($_) }) ) }
+
+=item print_as_yaml
+
+  $rex_inline->print_as_yaml;
+
+=item print_as_json
+
+  $rex_inline->print_as_json;
+
+=cut
+
+sub print_as_yaml { print join("\n", shift->map_reports(sub { Dump($_) })), "\n" }
+sub print_as_json { print join("\n", shift->map_reports(sub { encode_json($_) })), "\n" }
 
 =back
 =cut
@@ -336,6 +406,8 @@ sub _fetch_reports {
     push @reports, $report;
   }
   rmdir $report_path;
+
+  return @reports;
 }
 
 sub _build_tasklist {
@@ -367,8 +439,14 @@ sub _build_tasklist {
     task $task->name, group => $task->id, $task->func, { class => "Rex::CLI" };
   }
 
+  ### add auth fallback
+  if ($self->has_auth) {
+    auth fallback => @{ $self->auth };
+  }
+
   return Rex::TaskList->create;
 }
+
 sub _build_date { strftime "%Y%m%d", localtime(time) }
 sub _build_prefix {
   my $self = shift;

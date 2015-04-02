@@ -227,7 +227,7 @@ has pm => (is => 'ro', lazy => 1, builder => 1); # parallel forkmanager object, 
 
 =head1 METHODS
 
-=over 3
+=over 7
 
 =item add_task
 
@@ -334,6 +334,32 @@ sub execute {
   $self->pm->wait_all_children;
 }
 
+=item report_as_yaml
+
+  my $yaml_report = $rex_inline->report_as_yaml;
+
+=item report_as_json
+
+  my $json_report = $rex_inline->report_as_json;
+
+=cut
+
+sub report_as_yaml { Dump( shift->map_reports(sub { Dump($_) }) ) }
+sub report_as_json { encode_json( shift->map_reports(sub { encode_json($_) }) ) }
+
+=item print_as_yaml
+
+  $rex_inline->print_as_yaml;
+
+=item print_as_json
+
+  $rex_inline->print_as_json;
+
+=cut
+
+sub print_as_yaml { print join("\n", shift->map_reports(sub { Dump($_) })), "\n" }
+sub print_as_json { print join("\n", shift->map_reports(sub { encode_json($_) })), "\n" }
+
 =back
 =cut
 
@@ -384,8 +410,6 @@ sub _fetch_reports {
   return @reports;
 }
 
-sub report_as_yaml { print join("\n", shift->map_reports(sub { Dump($_) })), "\n" }
-sub report_as_json { print join("\n", shift->map_reports(sub { encode_json($_) })), "\n" }
 sub _build_tasklist {
   my $self = shift;
   

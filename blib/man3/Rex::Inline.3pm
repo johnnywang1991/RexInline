@@ -62,7 +62,7 @@
 .\" ========================================================================
 .\"
 .IX Title "Rex::Inline 3"
-.TH Rex::Inline 3 "2015-04-01" "perl v5.10.1" "User Contributed Perl Documentation"
+.TH Rex::Inline 3 "2015-04-02" "perl v5.10.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -90,23 +90,21 @@ Bug Tracker: <https://github.com/johnnywang1991/RexInline/issues>
 \&
 \&  my $rex_inline = Rex::Inline\->new(use_debug => 0);
 \&
-\&  # Rex::Inline::Test is based on Rex::Inline::Base module
-\&  # See Rex::Inline::Base Documents
-\&  $rex_inline\->add_task(
-\&    Rex::Inline::Test\->new(
-\&      user => $user,
-\&      server => [@server],
-\&      # if need password
-\&      password => $password,
-\&      # optional
-\&      public_key => $public_key,
-\&      private_key => $private_key,
-\&      # input param, in any format you want
-\&      input => $input,
-\&    )
-\&  );
+\&  # add default authentication 
+\&  # if you didn\*(Aqt provide authentication in your task, Rex::Inline will use this as default one
+\&  # or if your authentication is failed, Rex::Inline will use this retry the ssh connection
+\&  $rex_inline\->add_auth({
+\&    user => $user,
+\&    password => $password,
+\&    sudo => TRUE,
+\&  });
+\&  $rex_inline\->add_auth({
+\&    user => $user,
+\&    public_key => $public_key,
+\&    private_key => $private_key,
+\&  });
 \&
-\&  # or data reference like this
+\&  # data reference like this
 \&  $rex_inline\->add_task(
 \&    {
 \&      name => \*(Aqsomething_uniq_string\*(Aq,  # name is required when add data_reference task
@@ -121,6 +119,22 @@ Bug Tracker: <https://github.com/johnnywang1991/RexInline/issues>
 \&      public_key => $public_key,
 \&      private_key => $private_key,
 \&    }
+\&  );
+\&
+\&  # or Rex::Inline::Test is based on Rex::Inline::Base module
+\&  # See Rex::Inline::Base Documents
+\&  $rex_inline\->add_task(
+\&    Rex::Inline::Test\->new(
+\&      user => $user,
+\&      server => [@server],
+\&      # if need password
+\&      password => $password,
+\&      # optional
+\&      public_key => $public_key,
+\&      private_key => $private_key,
+\&      # input param, in any format you want
+\&      input => $input,
+\&    )
 \&  );
 \&
 \&  $rex_inline\->execute;
@@ -176,12 +190,16 @@ format is [{task_id => log_path}, ...]
 .IX Item "reports"
 get rex process reports (ArrayRef)
 .Sp
-format is \f(CW\*(C`[{report =\*(C'\fR \f(CW$report_ref\fR, task_id => \f(CW$task_id\fR, date => \f(CW$date\fR, hostname => \f(CW$hostname\fR}, ...]>
+format is:
+.Sp
+.Vb 1
+\&  [{report => $report_ref, task_id => $task_id, date => $date, hostname => $hostname}, ...]
+.Ve
 .Sp
 \&\fIreadonly\fR
 .SH "METHODS"
 .IX Header "METHODS"
-.IP "add_task" 2
+.IP "add_task" 7
 .IX Item "add_task"
 add \fBRex::Inline::Base\fR Object to TaskList
 .Sp
@@ -206,10 +224,37 @@ or Add Data reference to TaskList
 \&
 \&  ...
 .Ve
-.IP "execute" 2
+.IP "add_auth" 7
+.IX Item "add_auth"
+Add an authentication fallback
+.Sp
+This is the default authentication
+.Sp
+If all you provide authentications is failed, \fBRex::Inline\fR will try to use this one
+.IP "execute" 7
 .IX Item "execute"
 Execute all loaded Task in parallel
 .Sp
 .Vb 1
 \&  $rex_inline\->execute;
+.Ve
+.IP "report_as_yaml" 7
+.IX Item "report_as_yaml"
+.Vb 1
+\&  my $yaml_report = $rex_inline\->report_as_yaml;
+.Ve
+.IP "report_as_json" 7
+.IX Item "report_as_json"
+.Vb 1
+\&  my $json_report = $rex_inline\->report_as_json;
+.Ve
+.IP "print_as_yaml" 7
+.IX Item "print_as_yaml"
+.Vb 1
+\&  $rex_inline\->print_as_yaml;
+.Ve
+.IP "print_as_json" 7
+.IX Item "print_as_json"
+.Vb 1
+\&  $rex_inline\->print_as_json;
 .Ve

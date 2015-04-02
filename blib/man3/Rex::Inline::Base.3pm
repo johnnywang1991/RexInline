@@ -62,7 +62,7 @@
 .\" ========================================================================
 .\"
 .IX Title "Rex::Inline::Base 3"
-.TH Rex::Inline::Base 3 "2015-04-01" "perl v5.10.1" "User Contributed Perl Documentation"
+.TH Rex::Inline::Base 3 "2015-04-02" "perl v5.10.1" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -107,16 +107,14 @@ Bug Tracker: <https://github.com/RexOps/Rex/issues>
 set/get task id (String)
 .Sp
 default is random number
-.IP "user" 7
-.IX Item "user"
-username used when ssh connection
-.Sp
-This param is required.
 .IP "server" 7
 .IX Item "server"
 server address used when ssh connection
 .Sp
 This param is required.
+.IP "user" 7
+.IX Item "user"
+username used when ssh connection
 .IP "password" 7
 .IX Item "password"
 password used when ssh connection
@@ -126,6 +124,11 @@ private_key filename used when ssh connection
 .IP "public_key" 7
 .IX Item "public_key"
 public_key filename used when ssh connection
+.IP "sudo [TRUE|FALSE]" 7
+.IX Item "sudo [TRUE|FALSE]"
+use sudo when execute commands
+.Sp
+default is \f(CW\*(C`undef\*(C'\fR
 .IP "input" 7
 .IX Item "input"
 input param for tasklist module in any format you need

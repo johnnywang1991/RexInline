@@ -1,7 +1,8 @@
+Changes
 lib/Rex/Inline.pm
 lib/Rex/Inline/Base.pm
 lib/Rex/Inline/Test.pm
 Makefile.PL
 MANIFEST			This list of files
-t.pl
+README.md
 t/1.t
